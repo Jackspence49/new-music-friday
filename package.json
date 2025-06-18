@@ -1,0 +1,37 @@
+{
+  "name": "new-music-friday",
+  "version": "1.0.0",
+  "description": "A Node.js application for tracking and managing new music releases",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "music",
+    "spotify",
+    "new-releases"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "dotenv": "^16.0.0",
+    "mysql2": "^3.14.1",
+    "node-cron": "^3.0.0",
+    "nodemailer": "^6.9.0",
+    "pg": "^8.11.0",
+    "spotify-web-api-node": "^5.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "nodemon": "^3.0.0",
+    "prettier": "^3.0.0"
+  }
+}
