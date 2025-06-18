@@ -30,5 +30,6 @@ export const config = {
   // Security configuration
   security: {
     jwtSecret: process.env.JWT_SECRET,
+    encryptionKey: process.env.ENCRYPTION_KEY,
   },
 }; 

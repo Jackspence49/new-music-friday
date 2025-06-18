@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     spotify_user_id VARCHAR(255) NOT NULL UNIQUE,
-    access_token VARCHAR(255) NOT NULL,
-    refresh_token VARCHAR(255) NOT NULL,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
     token_expiry_time DATETIME NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
