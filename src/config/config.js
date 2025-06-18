@@ -1,8 +1,11 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 export const config = {
   // Server configuration
   server: {
-    port: process.env.PORT || 5000,
-    env: process.env.NODE_ENV || 'development',
+    port: process.env.PORT,
+    env: process.env.NODE_ENV,
   },
 
   // Spotify API configuration
@@ -14,10 +17,10 @@ export const config = {
 
   // Database configuration
   database: {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    database: process.env.DB_NAME || 'new_music_friday',
-    user: process.env.DB_USER || 'root',
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    name: process.env.DB_NAME,
+    user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     waitForConnections: true,
     connectionLimit: 10,
