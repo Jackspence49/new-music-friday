@@ -97,6 +97,56 @@ class SpotifyService {
       throw error;
     }
   }
+
+  /**
+   * Fetch all tracks from a playlist, handling pagination and normalization.
+   * @param {string} spotifyUserId - The Spotify user ID (to get access token)
+   * @param {string} playlistId - The Spotify playlist ID
+   * @returns {Promise<Array>} Array of normalized track objects, or null if inaccessible
+   */
+  async getAllPlaylistTracks(spotifyUserId, playlistId) {
+    try {
+      const accessToken = await tokenService.getValidAccessToken(spotifyUserId);
+      let url = `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=100`;
+      let allTracks = [];
+      while (url) {
+        const response = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        if (response.status === 404 || response.status === 403) {
+          console.error(`[ERROR][FETCH] Playlist not accessible: ${playlistId} for user ${spotifyUserId}`);
+          return null;
+        }
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          console.error(`[RATE LIMIT] Hit rate limit for playlist ${playlistId}. Retry-After: ${retryAfter}`);
+          return null;
+        }
+        if (!response.ok) {
+          console.error(`[ERROR][FETCH] Failed to fetch tracks for playlist ${playlistId}: ${response.statusText}`);
+          return null;
+        }
+        const data = await response.json();
+        if (Array.isArray(data.items)) {
+          for (const item of data.items) {
+            if (!item.track) continue;
+            allTracks.push({
+              track_id: item.track.id,
+              track_name: item.track.name,
+              artist_names: item.track.artists.map(a => a.name).join(', '),
+              added_at: item.added_at
+            });
+          }
+        }
+        url = data.next;
+      }
+      console.log(`[SUCCESS][FETCH] Fetched ${allTracks.length} tracks from playlist ${playlistId}`);
+      return allTracks;
+    } catch (error) {
+      console.error(`[ERROR][FETCH] Exception fetching tracks for playlist ${playlistId}:`, error);
+      return null;
+    }
+  }
 }
 
 export const spotifyService = new SpotifyService(); 
