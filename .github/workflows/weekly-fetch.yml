@@ -1,0 +1,24 @@
+name: Weekly Fetch Monitored Playlist Tracks
+
+on:
+  schedule:
+    # 9:00 AM EST is 14:00 UTC (during standard time), but 13:00 UTC during daylight saving (EDT)
+    # GitHub Actions uses UTC for cron, so to always run at 9:00 AM US Eastern Time, use both:
+    - cron: '0 14 * * 5' # 9 AM EST (Nov-Mar)
+    - cron: '0 13 * * 5' # 9 AM EDT (Mar-Nov)
+  workflow_dispatch:
+
+jobs:
+  fetch-monitored-playlist-tracks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run fetch-monitored-playlist-tracks script
+        run: node src/scripts/fetch-monitored-playlist-tracks.js 
