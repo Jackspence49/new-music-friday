@@ -18,10 +18,10 @@ async function getAllActiveMonitoredPlaylists() {
   return rows;
 }
 
-async function getLastSuccessfulRun(userId, playlistId) {
+async function getLastSuccessfulRun(userId) {
   const [rows] = await pool.query(
-    'SELECT last_successful_run FROM target_playlist WHERE user_id = ? AND spotify_playlist_id = ?',
-    [userId, playlistId]
+    'SELECT last_successful_run FROM target_playlist WHERE user_id = ?',
+    [userId]
   );
   if (rows.length === 0) return null;
   return rows[0].last_successful_run;
@@ -82,7 +82,7 @@ async function main() {
     for (const playlist of playlists) {
       const { spotify_playlist_id, playlist_name, spotify_user_id, user_id } = playlist;
       console.log(`\n[PROCESS] Playlist: ${playlist_name} (${spotify_playlist_id}) for user ${spotify_user_id}`);
-      const lastRunRaw = await getLastSuccessfulRun(user_id, spotify_playlist_id);
+      const lastRunRaw = await getLastSuccessfulRun(user_id);
       const lastRun = lastRunRaw ? parseDateUTC(lastRunRaw) : null;
       if (lastRunRaw && !lastRun) {
         console.warn(`[WARN] Corrupted last_successful_run timestamp: ${lastRunRaw}. Treating as first run.`);
@@ -172,10 +172,7 @@ async function main() {
       const trackUris = tracks.map(t => `spotify:track:${t.track_id}`);
       // Playlist name with week
       const now = new Date();
-      const weekStart = new Date(now);
-      weekStart.setUTCDate(now.getUTCDate() - now.getUTCDay()); // Sunday as start
-      const weekStr = `${weekStart.getUTCFullYear()}-W${String(Math.ceil((weekStart.getUTCDate() + 6) / 7)).padStart(2, '0')}`;
-      const newName = `New Adds (${weekStr})`;
+      const newName = "New Adds";
       const newDescription = `This playlist is managed by automation. Last refreshed: ${now.toISOString().slice(0,10)}`;
       console.log(`\n[REFRESH] Refreshing target playlist for user ${spotifyUserId}: ${spotify_playlist_id}`);
       try {
