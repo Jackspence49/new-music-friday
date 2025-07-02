@@ -1,148 +1,266 @@
 # New Music Friday
 
-A Node.js application for managing Spotify playlists and discovering new music.
+**New Music Friday** is a Node.js application for tracking, managing, and discovering new music releases on Spotify. It automates playlist management, monitors user-selected playlists, and securely stores credentials and tokens. The project is designed for music enthusiasts who want to keep up with the latest tracks and automate their Spotify playlist curation.
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Scripts & Usage](#scripts--usage)
+  - [start](#start)
+  - [dev](#dev)
+  - [lint](#lint)
+  - [format](#format)
+  - [test](#test)
+  - [Database Migration: init-db.js](#database-migration-init-dbjs)
+  - [Spotify Authorization: spotifyAuth.js](#spotify-authorization-spotifyauthjs)
+  - [Manage Monitored Playlists: manage-monitored-playlists.js](#manage-monitored-playlistsjs)
+  - [Fetch Monitored Playlist Tracks: fetch-monitored-playlist-tracks.js](#fetch-monitored-playlist-tracksjs)
+- [Security](#security)
+- [License](#license)
+
+---
+
+## Features
+
+- **Spotify OAuth2 Authorization**: Securely connect your Spotify account.
+- **Automated Playlist Management**: Monitor and aggregate new tracks from selected playlists.
+- **Database-backed**: Uses MySQL for persistent storage of users, playlists, and tokens.
+- **Encryption**: Sensitive data (like refresh tokens) is encrypted using AES-256-GCM.
+- **Scriptable**: Includes scripts for database setup, playlist management, and more.
+- **Extensible**: Modular structure for easy feature expansion.
+
+---
 
 ## Project Structure
 
 ```
-├── src/              # Source code
-│   ├── config/       # Configuration files
-│   ├── models/       # Database models
-│   ├── services/     # Business logic
-│   └── utils/        # Utility functions
-├── .env.example      # Environment variables template
-├── .eslintrc.json    # ESLint configuration
-├── .prettierrc       # Prettier configuration
-└── package.json      # Project dependencies
+├── src/
+│   ├── config/         # Configuration files
+│   ├── models/         # Database models
+│   ├── scripts/        # Utility and setup scripts
+│   ├── services/       # Business logic and Spotify API integration
+│   ├── tests/          # Unit tests
+│   └── utils/          # Utility functions
+├── package.json        # Project metadata and scripts
+├── README.md           # Project documentation
 ```
 
-## Security
+---
 
-### Encryption Setup
+## Getting Started
 
-The application uses AES-256-GCM encryption for sensitive data with the following security features:
+### Prerequisites
 
-- Secure key derivation using PBKDF2
-- Random salt generation for each encryption
-- Authentication tags to prevent tampering
-- Secure IV generation
-- Input validation and error handling
+- **Node.js** (v16+ recommended)
+- **npm** (v8+ recommended)
+- **MySQL** database (running and accessible)
+- A [Spotify Developer Application](https://developer.spotify.com/dashboard) for API credentials
 
-To set up encryption:
+### Installation
 
-1. Generate a secure encryption key (at least 32 characters):
+1. **Clone the repository:**
    ```bash
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   git clone <repo-url>
+   cd new-music-friday
    ```
 
-2. Add the encryption key to your `.env` file:
-   ```env
-   ENCRYPTION_KEY=your_generated_key
-   ```
-
-### Security Best Practices
-
-- Never commit the `.env` file to version control
-- Regularly rotate the encryption key
-- Use different encryption keys for development and production
-- Keep the encryption key secure and limit access to it
-- Monitor for any encryption/decryption failures
-
-## Spotify Authorization Setup
-
-Before running the application, you need to complete the one-time Spotify authorization process. Follow these steps:
-
-### 1. Create a Spotify Developer Application
-
-1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Log in with your Spotify account
-3. Click "Create App"
-4. Fill in the application details:
-   - App name: "New Music Friday" (or your preferred name)
-   - App description: Brief description of your app
-   - Website: Your website (optional)
-   - Redirect URI: `http://localhost:3000/callback` (or your preferred callback URL)
-5. Accept the terms and create the application
-6. Note down your Client ID and Client Secret
-
-### 2. Configure Environment Variables
-
-Create a `.env` file in the project root with the following variables:
-
-```env
-SPOTIFY_CLIENT_ID=your_client_id
-SPOTIFY_CLIENT_SECRET=your_client_secret
-SPOTIFY_REDIRECT_URI=http://localhost:3000/callback
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=your_database_name
-DB_USER=your_database_user
-DB_PASSWORD=your_database_password
-JWT_SECRET=your_jwt_secret
-```
-
-### 3. Run the Authorization Script
-
-1. Install dependencies:
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. Run the authorization script:
-   ```bash
-   node src/scripts/spotifyAuth.js
-   ```
+3. **Set up environment variables:**
+   - Create a `.env` file in the project root with the following variables:
+     ```
+     SPOTIFY_CLIENT_ID=your_client_id
+     SPOTIFY_CLIENT_SECRET=your_client_secret
+     SPOTIFY_REDIRECT_URI=http://localhost:3000/callback
+     DB_HOST=localhost
+     DB_PORT=3306
+     DB_NAME=your_database_name
+     DB_USER=your_database_user
+     DB_PASSWORD=your_database_password
+     JWT_SECRET=your_jwt_secret
+     ENCRYPTION_KEY=your_encryption_key
+     ```
 
-3. The script will:
-   - Display an authorization URL
-   - Open the URL in your browser
-   - Log in to Spotify and authorize the application
-   - Redirect you to the callback URL
-   - Copy the authorization code from the URL
-   - Paste the code into the terminal when prompted
-
-4. The script will then:
-   - Exchange the code for access and refresh tokens
-   - Fetch your Spotify profile
-   - Store your credentials securely in the database
-   - Display confirmation of successful authorization
-
-### Troubleshooting
-
-If you encounter any issues during the authorization process:
-
-1. **Invalid authorization code**: Make sure you're copying the entire code from the redirect URL
-2. **Database connection errors**: Verify your database credentials and ensure MySQL is running
-3. **Spotify API errors**: Check that your Client ID and Client Secret are correct
-4. **Encryption errors**: Ensure your JWT_SECRET is set and is a secure random string
-
-### Security Notes
-
-- The refresh token is encrypted before storage using AES-256-GCM
-- The encryption key is derived from your JWT_SECRET
-- Never share your .env file or expose your credentials
-- Regularly rotate your JWT_SECRET for enhanced security
-
-## Setup
-
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Copy `.env.example` to `.env` and fill in your environment variables
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-## Scripts
-
-- `npm run dev`: Start development server
-- `npm run lint`: Run ESLint
-- `npm run format`: Format code with Prettier
-- `npm test`: Run tests
+---
 
 ## Environment Variables
 
-See `.env.example` for all required environment variables. 
+| Variable                | Description                                 |
+|-------------------------|---------------------------------------------|
+| SPOTIFY_CLIENT_ID       | Spotify API client ID                       |
+| SPOTIFY_CLIENT_SECRET   | Spotify API client secret                   |
+| SPOTIFY_REDIRECT_URI    | Spotify OAuth redirect URI                  |
+| DB_HOST                 | MySQL host                                  |
+| DB_PORT                 | MySQL port                                  |
+| DB_NAME                 | MySQL database name                         |
+| DB_USER                 | MySQL user                                  |
+| DB_PASSWORD             | MySQL password                              |
+| JWT_SECRET              | Secret for JWT and encryption key derivation|
+| ENCRYPTION_KEY          | 32+ char key for AES-256-GCM encryption     |
+
+---
+
+## Scripts & Usage
+
+### `npm start`
+
+**Description:**  
+Runs the main application (`src/index.js`).  
+**Prerequisites:**  
+- `.env` file configured  
+- Database is running and accessible  
+- Spotify credentials set
+
+**Usage:**  
+```bash
+npm start
+```
+
+---
+
+### `npm run dev`
+
+**Description:**  
+Runs the app in development mode with automatic restarts on file changes using `nodemon`.  
+**Prerequisites:**  
+- Same as `npm start`  
+- Nodemon is installed (already included in devDependencies)
+
+**Usage:**  
+```bash
+npm run dev
+```
+
+---
+
+### `npm run lint`
+
+**Description:**  
+Checks code for style and syntax issues using ESLint.  
+**Prerequisites:**  
+- No special prerequisites; ESLint is included in devDependencies
+
+**Usage:**  
+```bash
+npm run lint
+```
+
+---
+
+### `npm run format`
+
+**Description:**  
+Formats the codebase using Prettier.  
+**Prerequisites:**  
+- No special prerequisites; Prettier is included in devDependencies
+
+**Usage:**  
+```bash
+npm run format
+```
+
+---
+
+### `npm test`
+
+**Description:**  
+Placeholder script.  
+**To run actual tests:**  
+- Install Mocha and Chai:
+  ```bash
+  npm install --save-dev mocha chai
+  ```
+- Run tests:
+  ```bash
+  npx mocha src/tests/**/*.test.js
+  ```
+
+**Prerequisites:**  
+- Mocha and Chai installed  
+- `.env` file configured (if tests require config)
+
+---
+
+### Database Migration: `src/scripts/init-db.js`
+
+**Description:**  
+Runs all SQL migrations in `src/scripts/migrations/` to set up or update the database schema.  
+**Prerequisites:**  
+- MySQL database running and accessible  
+- `.env` file with DB credentials
+
+**Usage:**  
+```bash
+node src/scripts/init-db.js
+```
+
+---
+
+### Spotify Authorization: `src/scripts/spotifyAuth.js`
+
+**Description:**  
+Guides you through the Spotify OAuth process, exchanges the code for tokens, and stores user credentials in the database.  
+**Prerequisites:**  
+- Spotify Developer App credentials in `.env`  
+- Database set up (run migrations first)
+
+**Usage:**  
+```bash
+node src/scripts/spotifyAuth.js
+```
+Follow the prompts in your terminal.
+
+---
+
+### Manage Monitored Playlists: `src/scripts/manage-monitored-playlists.js`
+
+**Description:**  
+Add, activate, or deactivate monitored playlists for a user.  
+**Prerequisites:**  
+- User must be authorized (see Spotify Authorization above)  
+- Database set up
+
+**Usage:**  
+```bash
+node src/scripts/manage-monitored-playlists.js
+```
+Follow the interactive prompts.
+
+---
+
+### Fetch Monitored Playlist Tracks: `src/scripts/fetch-monitored-playlist-tracks.js`
+
+**Description:**  
+Fetches new tracks from all active monitored playlists, deduplicates them, and updates each user's target playlist.  
+**Prerequisites:**  
+- Database set up and migrated  
+- Users authorized and playlists monitored  
+- Valid Spotify tokens in DB
+
+**Usage:**  
+```bash
+node src/scripts/fetch-monitored-playlist-tracks.js
+```
+
+---
+
+## Security
+
+- Sensitive data is encrypted using AES-256-GCM.
+- Never commit your `.env` file or credentials to version control.
+- Regularly rotate your `ENCRYPTION_KEY` and `JWT_SECRET`.
+- Use different credentials for development and production.
+
+---
+
+## License
+
+This project is licensed under the ISC License.
