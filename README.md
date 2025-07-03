@@ -11,17 +11,11 @@
 - [Getting Started](#getting-started)
 - [Environment Variables](#environment-variables)
 - [Scripts & Usage](#scripts--usage)
-  - [start](#start)
-  - [dev](#dev)
-  - [lint](#lint)
-  - [format](#format)
-  - [test](#test)
   - [Database Migration: init-db.js](#database-migration-init-dbjs)
   - [Spotify Authorization: spotifyAuth.js](#spotify-authorization-spotifyauthjs)
   - [Manage Monitored Playlists: manage-monitored-playlists.js](#manage-monitored-playlistsjs)
   - [Fetch Monitored Playlist Tracks: fetch-monitored-playlist-tracks.js](#fetch-monitored-playlist-tracksjs)
 - [Security](#security)
-- [License](#license)
 
 ---
 
@@ -109,86 +103,6 @@
 ---
 
 ## Scripts & Usage
-
-### `npm start`
-
-**Description:**  
-Runs the main application (`src/index.js`).  
-**Prerequisites:**  
-- `.env` file configured  
-- Database is running and accessible  
-- Spotify credentials set
-
-**Usage:**  
-```bash
-npm start
-```
-
----
-
-### `npm run dev`
-
-**Description:**  
-Runs the app in development mode with automatic restarts on file changes using `nodemon`.  
-**Prerequisites:**  
-- Same as `npm start`  
-- Nodemon is installed (already included in devDependencies)
-
-**Usage:**  
-```bash
-npm run dev
-```
-
----
-
-### `npm run lint`
-
-**Description:**  
-Checks code for style and syntax issues using ESLint.  
-**Prerequisites:**  
-- No special prerequisites; ESLint is included in devDependencies
-
-**Usage:**  
-```bash
-npm run lint
-```
-
----
-
-### `npm run format`
-
-**Description:**  
-Formats the codebase using Prettier.  
-**Prerequisites:**  
-- No special prerequisites; Prettier is included in devDependencies
-
-**Usage:**  
-```bash
-npm run format
-```
-
----
-
-### `npm test`
-
-**Description:**  
-Placeholder script.  
-**To run actual tests:**  
-- Install Mocha and Chai:
-  ```bash
-  npm install --save-dev mocha chai
-  ```
-- Run tests:
-  ```bash
-  npx mocha src/tests/**/*.test.js
-  ```
-
-**Prerequisites:**  
-- Mocha and Chai installed  
-- `.env` file configured (if tests require config)
-
----
-
 ### Database Migration: `src/scripts/init-db.js`
 
 **Description:**  
@@ -261,6 +175,49 @@ node src/scripts/fetch-monitored-playlist-tracks.js
 
 ---
 
-## License
+## GitHub Actions Automation
 
-This project is licensed under the ISC License.
+The project includes a GitHub Actions workflow that automatically runs the fetch-monitored-playlist-tracks script every Friday at 9:00 AM UTC.
+
+### Setup Instructions
+
+1. **Add Repository Secrets:**
+   Go to your GitHub repository → Settings → Secrets and variables → Actions, and add the following secrets:
+   
+   | Secret Name | Description |
+   |-------------|-------------|
+   | `SPOTIFY_CLIENT_ID` | Your Spotify API client ID |
+   | `SPOTIFY_CLIENT_SECRET` | Your Spotify API client secret |
+   | `SPOTIFY_REDIRECT_URI` | Your Spotify OAuth redirect URI |
+   | `DB_HOST` | MySQL database host |
+   | `DB_PORT` | MySQL database port |
+   | `DB_NAME` | MySQL database name |
+   | `DB_USER` | MySQL database user |
+   | `DB_PASSWORD` | MySQL database password |
+   | `JWT_SECRET` | Secret for JWT and encryption key derivation |
+   | `ENCRYPTION_KEY` | 32+ character key for AES-256-GCM encryption |
+
+2. **Workflow File:**
+   The workflow file is located at `.github/workflows/fetch-monitored-playlists.yml` and includes:
+   - **Scheduled execution:** Every Friday at 9:00 AM UTC
+   - **Manual triggering:** Can be run manually via GitHub Actions UI
+   - **Error handling:** Uploads logs as artifacts on failure
+   - **Node.js setup:** Uses Node.js 18 with npm caching
+
+3. **Prerequisites:**
+   - Database must be accessible from GitHub Actions runners
+   - Users must be authorized and playlists must be monitored
+   - Valid Spotify tokens must be stored in the database
+
+4. **Monitoring:**
+   - Check the Actions tab in your GitHub repository to monitor execution
+   - Failed runs will create artifacts with logs for debugging
+   - The workflow will automatically retry on the next scheduled run
+
+### Manual Execution
+
+You can manually trigger the workflow:
+1. Go to your GitHub repository
+2. Click on the "Actions" tab
+3. Select "Fetch Monitored Playlists" workflow
+4. Click "Run workflow" button
