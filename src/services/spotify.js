@@ -66,12 +66,15 @@ export const clearPlaylistTracks = async (spotifyUserId, playlistId) => {
     const accessToken = await tokenService.getValidAccessToken(spotifyUserId);
     spotifyApi.setAccessToken(accessToken);
     // Get all track URIs in the playlist
-    const tracks = await spotifyApi.getPlaylistTracks(playlistId, { fields: 'items(track(uri))', limit: 100 });
-    const uris = tracks.body.items.map(item => item.track && item.track.uri).filter(Boolean);
+    const tracks = await spotifyApi.getPlaylistTracks(playlistId, {
+      fields: 'items(track(uri))',
+      limit: 100,
+    });
+    const uris = tracks.body.items.map((item) => item.track && item.track.uri).filter(Boolean);
     if (uris.length === 0) return;
     // Remove in batches of 100
     for (let i = 0; i < uris.length; i += 100) {
-      const batch = uris.slice(i, i + 100).map(uri => ({ uri }));
+      const batch = uris.slice(i, i + 100).map((uri) => ({ uri }));
       await spotifyApi.removeTracksFromPlaylist(playlistId, batch);
     }
   } catch (error) {
@@ -119,4 +122,4 @@ export const updatePlaylistDetails = async (spotifyUserId, playlistId, options) 
   }
 };
 
-export { spotifyApi }; 
+export { spotifyApi };

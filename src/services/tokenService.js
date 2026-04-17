@@ -23,11 +23,11 @@ class TokenService {
 
       // Refresh the token
       const tokens = await this.refreshToken(user.refreshToken);
-      
+
       // Update cache
       this.tokenCache.set(spotifyId, {
         accessToken: tokens.accessToken,
-        expiresAt: Date.now() + (tokens.expiresIn * 1000)
+        expiresAt: Date.now() + tokens.expiresIn * 1000,
       });
 
       // Update database with new refresh token if it was refreshed
@@ -48,14 +48,14 @@ class TokenService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(
+          Authorization: `Basic ${Buffer.from(
             `${spotifyService.clientId}:${spotifyService.clientSecret}`
-          ).toString('base64')}`
+          ).toString('base64')}`,
         },
         body: new URLSearchParams({
           grant_type: 'refresh_token',
-          refresh_token: refreshToken
-        })
+          refresh_token: refreshToken,
+        }),
       });
 
       if (!response.ok) {
@@ -68,7 +68,7 @@ class TokenService {
       return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token || refreshToken, // Spotify may not return a new refresh token
-        expiresIn: data.expires_in
+        expiresIn: data.expires_in,
       };
     } catch (error) {
       console.error('Error refreshing token:', error);
@@ -81,4 +81,4 @@ class TokenService {
   }
 }
 
-export const tokenService = new TokenService(); 
+export const tokenService = new TokenService();

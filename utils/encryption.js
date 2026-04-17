@@ -33,29 +33,25 @@ export class Encryption {
       // Generate random salt and IV
       const salt = this.generateSalt();
       const iv = crypto.randomBytes(ENCRYPTION_CONFIG.ivLength);
-      
+
       // Derive key using salt
       const key = this.deriveKey(salt);
-      
+
       // Create cipher
-      const cipher = crypto.createCipheriv(
-        ENCRYPTION_CONFIG.algorithm,
-        key,
-        iv
-      );
-      
+      const cipher = crypto.createCipheriv(ENCRYPTION_CONFIG.algorithm, key, iv);
+
       // Encrypt the text
       const encrypted = Buffer.concat([
         cipher.update(text, ENCRYPTION_CONFIG.encoding),
-        cipher.final()
+        cipher.final(),
       ]);
-      
+
       // Get auth tag
       const tag = cipher.getAuthTag();
-      
+
       // Combine all components
       const result = Buffer.concat([salt, iv, tag, encrypted]);
-      
+
       return result.toString('base64');
     } catch (error) {
       if (error instanceof EncryptionError) {
@@ -72,16 +68,15 @@ export class Encryption {
       }
 
       const buffer = Buffer.from(encryptedData, 'base64');
-      
+
       // Validate buffer length
-      const minLength = ENCRYPTION_CONFIG.saltLength + 
-                       ENCRYPTION_CONFIG.ivLength + 
-                       ENCRYPTION_CONFIG.tagLength;
-      
+      const minLength =
+        ENCRYPTION_CONFIG.saltLength + ENCRYPTION_CONFIG.ivLength + ENCRYPTION_CONFIG.tagLength;
+
       if (buffer.length < minLength) {
         throw new EncryptionError('Invalid encrypted data length');
       }
-      
+
       // Extract components
       const salt = buffer.slice(0, ENCRYPTION_CONFIG.saltLength);
       const iv = buffer.slice(
@@ -95,24 +90,17 @@ export class Encryption {
       const encrypted = buffer.slice(
         ENCRYPTION_CONFIG.saltLength + ENCRYPTION_CONFIG.ivLength + ENCRYPTION_CONFIG.tagLength
       );
-      
+
       // Recreate key using salt
       const key = this.deriveKey(salt);
-      
+
       // Create decipher
-      const decipher = crypto.createDecipheriv(
-        ENCRYPTION_CONFIG.algorithm,
-        key,
-        iv
-      );
+      const decipher = crypto.createDecipheriv(ENCRYPTION_CONFIG.algorithm, key, iv);
       decipher.setAuthTag(tag);
-      
+
       // Decrypt
-      const decrypted = Buffer.concat([
-        decipher.update(encrypted),
-        decipher.final()
-      ]);
-      
+      const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+
       return decrypted.toString(ENCRYPTION_CONFIG.encoding);
     } catch (error) {
       if (error instanceof EncryptionError) {
@@ -125,10 +113,9 @@ export class Encryption {
   static validateEncryptedData(encryptedData) {
     try {
       const buffer = Buffer.from(encryptedData, 'base64');
-      const minLength = ENCRYPTION_CONFIG.saltLength + 
-                       ENCRYPTION_CONFIG.ivLength + 
-                       ENCRYPTION_CONFIG.tagLength;
-      
+      const minLength =
+        ENCRYPTION_CONFIG.saltLength + ENCRYPTION_CONFIG.ivLength + ENCRYPTION_CONFIG.tagLength;
+
       return buffer.length >= minLength;
     } catch {
       return false;
@@ -136,4 +123,4 @@ export class Encryption {
   }
 }
 
-export const encryption = new Encryption(); 
+export const encryption = new Encryption();

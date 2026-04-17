@@ -6,10 +6,9 @@ const IV_LENGTH = 16; // For AES, this is always 16
 // Ensure the key is exactly 32 bytes
 const getKey = () => {
   // If the key is a hex string, decode it
-  const key = ENCRYPTION_KEY.length === 64 
-    ? Buffer.from(ENCRYPTION_KEY, 'hex')
-    : Buffer.from(ENCRYPTION_KEY);
-    
+  const key =
+    ENCRYPTION_KEY.length === 64 ? Buffer.from(ENCRYPTION_KEY, 'hex') : Buffer.from(ENCRYPTION_KEY);
+
   if (key.length !== 32) {
     throw new Error(`Encryption key must be exactly 32 bytes, got ${key.length} bytes`);
   }
@@ -34,4 +33,4 @@ export class Encryption {
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
   }
-} 
+}

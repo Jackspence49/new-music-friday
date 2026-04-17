@@ -58,12 +58,14 @@
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone <repo-url>
    cd new-music-friday
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
@@ -87,31 +89,34 @@
 
 ## Environment Variables
 
-| Variable                | Description                                 |
-|-------------------------|---------------------------------------------|
-| SPOTIFY_CLIENT_ID       | Spotify API client ID                       |
-| SPOTIFY_CLIENT_SECRET   | Spotify API client secret                   |
-| SPOTIFY_REDIRECT_URI    | Spotify OAuth redirect URI                  |
-| DB_HOST                 | MySQL host                                  |
-| DB_PORT                 | MySQL port                                  |
-| DB_NAME                 | MySQL database name                         |
-| DB_USER                 | MySQL user                                  |
-| DB_PASSWORD             | MySQL password                              |
-| JWT_SECRET              | Secret for JWT and encryption key derivation|
-| ENCRYPTION_KEY          | 32+ char key for AES-256-GCM encryption     |
+| Variable              | Description                                  |
+| --------------------- | -------------------------------------------- |
+| SPOTIFY_CLIENT_ID     | Spotify API client ID                        |
+| SPOTIFY_CLIENT_SECRET | Spotify API client secret                    |
+| SPOTIFY_REDIRECT_URI  | Spotify OAuth redirect URI                   |
+| DB_HOST               | MySQL host                                   |
+| DB_PORT               | MySQL port                                   |
+| DB_NAME               | MySQL database name                          |
+| DB_USER               | MySQL user                                   |
+| DB_PASSWORD           | MySQL password                               |
+| JWT_SECRET            | Secret for JWT and encryption key derivation |
+| ENCRYPTION_KEY        | 32+ char key for AES-256-GCM encryption      |
 
 ---
 
 ## Scripts & Usage
+
 ### Database Migration: `src/scripts/init-db.js`
 
 **Description:**  
 Runs all SQL migrations in `src/scripts/migrations/` to set up or update the database schema.  
-**Prerequisites:**  
-- MySQL database running and accessible  
+**Prerequisites:**
+
+- MySQL database running and accessible
 - `.env` file with DB credentials
 
-**Usage:**  
+**Usage:**
+
 ```bash
 node src/scripts/init-db.js
 ```
@@ -122,14 +127,17 @@ node src/scripts/init-db.js
 
 **Description:**  
 Guides you through the Spotify OAuth process, exchanges the code for tokens, and stores user credentials in the database.  
-**Prerequisites:**  
-- Spotify Developer App credentials in `.env`  
+**Prerequisites:**
+
+- Spotify Developer App credentials in `.env`
 - Database set up (run migrations first)
 
-**Usage:**  
+**Usage:**
+
 ```bash
 node src/scripts/spotifyAuth.js
 ```
+
 Follow the prompts in your terminal.
 
 ---
@@ -138,14 +146,17 @@ Follow the prompts in your terminal.
 
 **Description:**  
 Add, activate, or deactivate monitored playlists for a user.  
-**Prerequisites:**  
-- User must be authorized (see Spotify Authorization above)  
+**Prerequisites:**
+
+- User must be authorized (see Spotify Authorization above)
 - Database set up
 
-**Usage:**  
+**Usage:**
+
 ```bash
 node src/scripts/manage-monitored-playlists.js
 ```
+
 Follow the interactive prompts.
 
 ---
@@ -154,12 +165,14 @@ Follow the interactive prompts.
 
 **Description:**  
 Fetches new tracks from all active monitored playlists, deduplicates them, and updates each user's target playlist.  
-**Prerequisites:**  
-- Database set up and migrated  
-- Users authorized and playlists monitored  
+**Prerequisites:**
+
+- Database set up and migrated
+- Users authorized and playlists monitored
 - Valid Spotify tokens in DB
 
-**Usage:**  
+**Usage:**
+
 ```bash
 node src/scripts/fetch-monitored-playlist-tracks.js
 ```
@@ -183,28 +196,30 @@ The project includes a GitHub Actions workflow that automatically runs the fetch
 
 1. **Add Repository Secrets:**
    Go to your GitHub repository → Settings → Secrets and variables → Actions, and add the following secrets:
-   
-   | Secret Name | Description |
-   |-------------|-------------|
-   | `SPOTIFY_CLIENT_ID` | Your Spotify API client ID |
-   | `SPOTIFY_CLIENT_SECRET` | Your Spotify API client secret |
-   | `SPOTIFY_REDIRECT_URI` | Your Spotify OAuth redirect URI |
-   | `DB_HOST` | MySQL database host |
-   | `DB_PORT` | MySQL database port |
-   | `DB_NAME` | MySQL database name |
-   | `DB_USER` | MySQL database user |
-   | `DB_PASSWORD` | MySQL database password |
-   | `JWT_SECRET` | Secret for JWT and encryption key derivation |
-   | `ENCRYPTION_KEY` | 32+ character key for AES-256-GCM encryption |
+
+   | Secret Name             | Description                                  |
+   | ----------------------- | -------------------------------------------- |
+   | `SPOTIFY_CLIENT_ID`     | Your Spotify API client ID                   |
+   | `SPOTIFY_CLIENT_SECRET` | Your Spotify API client secret               |
+   | `SPOTIFY_REDIRECT_URI`  | Your Spotify OAuth redirect URI              |
+   | `DB_HOST`               | MySQL database host                          |
+   | `DB_PORT`               | MySQL database port                          |
+   | `DB_NAME`               | MySQL database name                          |
+   | `DB_USER`               | MySQL database user                          |
+   | `DB_PASSWORD`           | MySQL database password                      |
+   | `JWT_SECRET`            | Secret for JWT and encryption key derivation |
+   | `ENCRYPTION_KEY`        | 32+ character key for AES-256-GCM encryption |
 
 2. **Workflow File:**
    The workflow file is located at `.github/workflows/fetch-monitored-playlists.yml` and includes:
+
    - **Scheduled execution:** Every Friday at 9:00 AM UTC
    - **Manual triggering:** Can be run manually via GitHub Actions UI
    - **Error handling:** Uploads logs as artifacts on failure
    - **Node.js setup:** Uses Node.js 18 with npm caching
 
 3. **Prerequisites:**
+
    - Database must be accessible from GitHub Actions runners
    - Users must be authorized and playlists must be monitored
    - Valid Spotify tokens must be stored in the database
@@ -217,6 +232,7 @@ The project includes a GitHub Actions workflow that automatically runs the fetch
 ### Manual Execution
 
 You can manually trigger the workflow:
+
 1. Go to your GitHub repository
 2. Click on the "Actions" tab
 3. Select "Fetch Monitored Playlists" workflow

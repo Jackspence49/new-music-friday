@@ -10,7 +10,7 @@ const pool = mysql.createPool({
   database: config.database.name,
   waitForConnections: config.database.waitForConnections,
   connectionLimit: config.database.connectionLimit,
-  queueLimit: config.database.queueLimit
+  queueLimit: config.database.queueLimit,
 });
 
 // Test database connection
@@ -26,4 +26,4 @@ export const testConnection = async () => {
   }
 };
 
-export { pool }; 
+export { pool };

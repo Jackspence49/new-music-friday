@@ -91,21 +91,21 @@ describe('Encryption', () => {
   describe('end-to-end', () => {
     it('should handle various string lengths', () => {
       const testStrings = [
-        '',                    // empty string
-        'a',                   // single character
-        'test',               // short string
-        'Hello, World!',      // medium string
-        'a'.repeat(1000),     // long string
+        '', // empty string
+        'a', // single character
+        'test', // short string
+        'Hello, World!', // medium string
+        'a'.repeat(1000), // long string
         'Special chars: !@#$%^&*()', // special characters
-        'Unicode: 你好世界',    // unicode characters
-        'Mixed: 123!@#你好'     // mixed content
+        'Unicode: 你好世界', // unicode characters
+        'Mixed: 123!@#你好', // mixed content
       ];
 
-      testStrings.forEach(str => {
+      testStrings.forEach((str) => {
         const encrypted = encryption.encrypt(str);
         const decrypted = encryption.decrypt(encrypted);
         expect(decrypted).to.equal(str);
       });
     });
   });
-}); 
+});

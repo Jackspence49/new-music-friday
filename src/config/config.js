@@ -24,7 +24,7 @@ export const config = {
     password: process.env.DB_PASSWORD,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
   },
 
   // Security configuration
@@ -32,4 +32,4 @@ export const config = {
     jwtSecret: process.env.JWT_SECRET,
     encryptionKey: process.env.ENCRYPTION_KEY,
   },
-}; 
+};

@@ -13,7 +13,7 @@ class User {
       database: config.database.name,
       waitForConnections: true,
       connectionLimit: 10,
-      queueLimit: 0
+      queueLimit: 0,
     });
 
     // Test the connection
@@ -36,11 +36,11 @@ class User {
     try {
       // First, check the existing table structure
       const [columns] = await connection.execute('SHOW COLUMNS FROM users');
-      console.log('Existing table structure:', columns.map(col => col.Field).join(', '));
+      console.log('Existing table structure:', columns.map((col) => col.Field).join(', '));
 
       // Check if we need to add the spotify_id column
-      const hasSpotifyId = columns.some(col => col.Field === 'spotify_user_id');
-      
+      const hasSpotifyId = columns.some((col) => col.Field === 'spotify_user_id');
+
       if (!hasSpotifyId) {
         console.log('Adding spotify_user_id column...');
         await connection.execute(`
@@ -83,8 +83,9 @@ class User {
     const connection = await this.pool.getConnection();
     try {
       const encryptedToken = Encryption.encrypt(refreshToken);
-      
-      await connection.execute(`
+
+      await connection.execute(
+        `
         INSERT INTO users (spotify_user_id, email, refresh_token, token_expiry_time, access_token)
         VALUES (?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
@@ -93,7 +94,9 @@ class User {
           token_expiry_time = VALUES(token_expiry_time),
           access_token = VALUES(access_token),
           updated_at = CURRENT_TIMESTAMP
-      `, [spotifyId, email, encryptedToken, tokenExpiresAt, accessToken]);
+      `,
+        [spotifyId, email, encryptedToken, tokenExpiresAt, accessToken]
+      );
     } finally {
       connection.release();
     }
@@ -102,11 +105,10 @@ class User {
   async findBySpotifyId(spotifyId) {
     const connection = await this.pool.getConnection();
     try {
-      const [rows] = await connection.execute(
-        'SELECT * FROM users WHERE spotify_user_id = ?',
-        [spotifyId]
-      );
-      
+      const [rows] = await connection.execute('SELECT * FROM users WHERE spotify_user_id = ?', [
+        spotifyId,
+      ]);
+
       if (rows.length === 0) {
         return null;
       }
@@ -114,7 +116,7 @@ class User {
       const user = rows[0];
       return {
         ...user,
-        refreshToken: Encryption.decrypt(user.refresh_token)
+        refreshToken: Encryption.decrypt(user.refresh_token),
       };
     } finally {
       connection.release();
@@ -134,4 +136,4 @@ class User {
   }
 }
 
-export const userModel = new User(); 
+export const userModel = new User();

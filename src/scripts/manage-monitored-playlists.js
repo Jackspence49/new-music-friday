@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import readline from 'readline';
 import { pool } from '../config/database.js';
 import { userModel } from '../models/User.js';
@@ -5,11 +6,11 @@ import { tokenService } from '../services/tokenService.js';
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 function prompt(question) {
-  return new Promise(resolve => rl.question(question, resolve));
+  return new Promise((resolve) => rl.question(question, resolve));
 }
 
 async function getUserIdBySpotifyId(spotifyUserId) {
@@ -22,7 +23,7 @@ async function validateAndFetchPlaylist(spotifyUserId, playlistId) {
   try {
     const accessToken = await tokenService.getValidAccessToken(spotifyUserId);
     const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (response.status === 404) throw new Error('Playlist not found (may be deleted or private)');
     if (!response.ok) throw new Error(`Spotify API error: ${response.statusText}`);
@@ -44,7 +45,9 @@ async function addMonitoredPlaylist(spotifyUserId, playlistId) {
        ON DUPLICATE KEY UPDATE playlist_name = VALUES(playlist_name), is_active = TRUE, updated_at = CURRENT_TIMESTAMP`,
       [userId, playlistId, playlistName]
     );
-    console.log(`[ADD] Monitored playlist added/activated: ${playlistName} (${playlistId}) for user ${spotifyUserId}`);
+    console.log(
+      `[ADD] Monitored playlist added/activated: ${playlistName} (${playlistId}) for user ${spotifyUserId}`
+    );
   } catch (error) {
     console.error(`[ERROR][ADD] ${error.message}`);
   }
@@ -62,7 +65,9 @@ async function setPlaylistActiveFlag(spotifyUserId, playlistId, isActive) {
       'UPDATE monitored_playlists SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND spotify_playlist_id = ?',
       [isActive, userId, playlistId]
     );
-    console.log(`[${isActive ? 'ACTIVATE' : 'DEACTIVATE'}] Playlist ${playlistId} for user ${spotifyUserId} is now ${isActive ? 'active' : 'inactive'}`);
+    console.log(
+      `[${isActive ? 'ACTIVATE' : 'DEACTIVATE'}] Playlist ${playlistId} for user ${spotifyUserId} is now ${isActive ? 'active' : 'inactive'}`
+    );
   } catch (error) {
     console.error(`[ERROR][${isActive ? 'ACTIVATE' : 'DEACTIVATE'}] ${error.message}`);
   }
@@ -89,9 +94,9 @@ async function main() {
   }
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('[FATAL ERROR]', err);
   rl.close();
   pool.end();
   process.exit(0);
-}); 
+});

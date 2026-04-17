@@ -10,15 +10,16 @@ class SpotifyService {
   }
 
   getAuthorizationUrl() {
-    const scope = 'user-read-private user-read-email playlist-read-private playlist-modify-public playlist-modify-private';
+    const scope =
+      'user-read-private user-read-email playlist-read-private playlist-modify-public playlist-modify-private';
     const state = crypto.randomBytes(16).toString('hex');
-    
+
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: this.clientId,
       scope: scope,
       redirect_uri: this.redirectUri,
-      state: state
+      state: state,
     });
 
     return `https://accounts.spotify.com/authorize?${params.toString()}`;
@@ -30,13 +31,13 @@ class SpotifyService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`
+          Authorization: `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
         },
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code: code,
-          redirect_uri: this.redirectUri
-        })
+          redirect_uri: this.redirectUri,
+        }),
       });
 
       if (!response.ok) {
@@ -47,7 +48,7 @@ class SpotifyService {
       return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
-        expiresIn: data.expires_in
+        expiresIn: data.expires_in,
       };
     } catch (error) {
       console.error('Error exchanging code for tokens:', error);
@@ -58,11 +59,11 @@ class SpotifyService {
   async getUserProfile(spotifyId) {
     try {
       const accessToken = await tokenService.getValidAccessToken(spotifyId);
-      
+
       const response = await fetch('https://api.spotify.com/v1/me', {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       if (!response.ok) {
@@ -80,11 +81,11 @@ class SpotifyService {
   async getPlaylists(spotifyId) {
     try {
       const accessToken = await tokenService.getValidAccessToken(spotifyId);
-      
+
       const response = await fetch('https://api.spotify.com/v1/me/playlists', {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       if (!response.ok) {
@@ -111,19 +112,25 @@ class SpotifyService {
       let allTracks = [];
       while (url) {
         const response = await fetch(url, {
-          headers: { 'Authorization': `Bearer ${accessToken}` }
+          headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (response.status === 404 || response.status === 403) {
-          console.error(`[ERROR][FETCH] Playlist not accessible: ${playlistId} for user ${spotifyUserId}`);
+          console.error(
+            `[ERROR][FETCH] Playlist not accessible: ${playlistId} for user ${spotifyUserId}`
+          );
           return null;
         }
         if (response.status === 429) {
           const retryAfter = response.headers.get('Retry-After');
-          console.error(`[RATE LIMIT] Hit rate limit for playlist ${playlistId}. Retry-After: ${retryAfter}`);
+          console.error(
+            `[RATE LIMIT] Hit rate limit for playlist ${playlistId}. Retry-After: ${retryAfter}`
+          );
           return null;
         }
         if (!response.ok) {
-          console.error(`[ERROR][FETCH] Failed to fetch tracks for playlist ${playlistId}: ${response.statusText}`);
+          console.error(
+            `[ERROR][FETCH] Failed to fetch tracks for playlist ${playlistId}: ${response.statusText}`
+          );
           return null;
         }
         const data = await response.json();
@@ -133,14 +140,16 @@ class SpotifyService {
             allTracks.push({
               track_id: item.track.id,
               track_name: item.track.name,
-              artist_names: item.track.artists.map(a => a.name).join(', '),
-              added_at: item.added_at
+              artist_names: item.track.artists.map((a) => a.name).join(', '),
+              added_at: item.added_at,
             });
           }
         }
         url = data.next;
       }
-      console.log(`[SUCCESS][FETCH] Fetched ${allTracks.length} tracks from playlist ${playlistId}`);
+      console.log(
+        `[SUCCESS][FETCH] Fetched ${allTracks.length} tracks from playlist ${playlistId}`
+      );
       return allTracks;
     } catch (error) {
       console.error(`[ERROR][FETCH] Exception fetching tracks for playlist ${playlistId}:`, error);
@@ -149,4 +158,4 @@ class SpotifyService {
   }
 }
 
-export const spotifyService = new SpotifyService(); 
+export const spotifyService = new SpotifyService();

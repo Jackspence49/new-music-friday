@@ -11,9 +11,7 @@ async function runMigrations() {
     // Get all migration files
     const migrationsDir = path.join(__dirname, 'migrations');
     const files = await fs.readdir(migrationsDir);
-    const migrationFiles = files
-      .filter(file => file.endsWith('.sql'))
-      .sort();
+    const migrationFiles = files.filter((file) => file.endsWith('.sql')).sort();
 
     // Create migrations table if it doesn't exist
     await pool.query(`
@@ -27,20 +25,19 @@ async function runMigrations() {
     // Run each migration
     for (const file of migrationFiles) {
       const migrationName = path.basename(file, '.sql');
-      
+
       // Check if migration has been executed
-      const [executed] = await pool.query(
-        'SELECT id FROM migrations WHERE name = ?',
-        [migrationName]
-      );
+      const [executed] = await pool.query('SELECT id FROM migrations WHERE name = ?', [
+        migrationName,
+      ]);
 
       if (executed.length === 0) {
         console.log(`Running migration: ${migrationName}`);
-        
+
         // Read and execute migration file
         const migrationPath = path.join(migrationsDir, file);
         const migrationSQL = await fs.readFile(migrationPath, 'utf8');
-        
+
         // Start transaction
         const connection = await pool.getConnection();
         await connection.beginTransaction();
@@ -48,12 +45,9 @@ async function runMigrations() {
         try {
           // Execute migration
           await connection.query(migrationSQL);
-          
+
           // Record migration
-          await connection.query(
-            'INSERT INTO migrations (name) VALUES (?)',
-            [migrationName]
-          );
+          await connection.query('INSERT INTO migrations (name) VALUES (?)', [migrationName]);
 
           await connection.commit();
           console.log(`Successfully executed migration: ${migrationName}`);
@@ -78,4 +72,4 @@ async function runMigrations() {
 }
 
 // Run migrations
-runMigrations().catch(console.error); 
+runMigrations().catch(console.error);
