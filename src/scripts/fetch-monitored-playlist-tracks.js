@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { pool } from '../config/database.js';
 import { spotifyService } from '../services/spotifyService.js';
 import {
@@ -187,7 +188,7 @@ async function main() {
     // For each user, refresh their target playlist
     for (const [userId, target] of Object.entries(userTargetPlaylists)) {
       if (!target) continue;
-      const { spotify_playlist_id, playlist_name } = target;
+      const { spotify_playlist_id } = target;
       const user = playlists.find((p) => p.user_id == userId);
       if (!user) continue;
       const spotifyUserId = user.spotify_user_id;

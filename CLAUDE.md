@@ -25,8 +25,15 @@ node src/scripts/spotifyAuth.js
 # Manage which playlists are monitored (interactive CLI)
 node src/scripts/manage-monitored-playlists.js
 
-# Core job: fetch new tracks and refresh target playlist
+# Manage which artists are monitored (interactive CLI)
+node src/scripts/manage-monitored-artists.js
+
+# Core job: fetch tracks from both monitored playlists AND artists, merged into one target playlist
+node src/scripts/fetch-new-music.js
+
+# Legacy individual jobs (kept for reference — prefer fetch-new-music.js)
 node src/scripts/fetch-monitored-playlist-tracks.js
+node src/scripts/fetch-monitored-artists.js
 ```
 
 There is no test runner configured — `npm test` exits with an error. Tests in `src/tests/` must be run directly (e.g. `node src/tests/encryption.test.js`).
@@ -35,7 +42,7 @@ There is no test runner configured — `npm test` exits with an error. Tests in 
 
 The project is a **script-driven Node.js app** (ESM, `"type": "module"`) with no HTTP server — `src/index.js` is a stub with TODO comments. All real logic lives in the scripts and services.
 
-### Data flow for the core job (`fetch-monitored-playlist-tracks.js`)
+### Data flow: playlist job (`fetch-monitored-playlist-tracks.js`)
 
 1. Queries MySQL for all active rows in `monitored_playlists` (joined with `users`).
 2. For each user, ensures a `target_playlist` row and a corresponding Spotify playlist ("New Adds") exist, creating them if needed.
@@ -44,9 +51,18 @@ The project is a **script-driven Node.js app** (ESM, `"type": "module"`) with no
 5. Deduplicates across monitored playlists by `track_id`.
 6. Clears the target playlist, adds the new tracks, updates its description, and writes `last_successful_run` back to the DB.
 
+### Data flow: artist job (`fetch-monitored-artists.js`)
+
+1. Queries MySQL for all active rows in `monitored_artists` (joined with `users`), grouped by user.
+2. For each user, ensures a `target_playlist` row and a corresponding Spotify playlist ("New Adds") exist, creating them if needed.
+3. For each artist, fetches all albums/singles via `SpotifyService.getArtistAlbums()`, filtering to those released after `last_successful_run` (first run: last 7 days).
+4. Fetches all tracks from each recent release via `SpotifyService.getAlbumTracks()`.
+5. Deduplicates across artists by `track_id`.
+6. Clears the target playlist, adds the new tracks, updates its description, and writes `last_successful_run` back to the DB.
+
 ### Two Spotify API layers (important distinction)
 
-- **`src/services/spotifyService.js`** — Uses the native `fetch` API directly against `api.spotify.com`. Handles token refresh internally via `tokenService`. Used for reading playlists/tracks.
+- **`src/services/spotifyService.js`** — Uses the native `fetch` API directly against `api.spotify.com`. Handles token refresh internally via `tokenService`. Used for reading playlists/tracks, artist albums, album tracks, and top artists.
 - **`src/services/spotify.js`** — Uses the `spotify-web-api-node` SDK wrapper. Used for write operations: creating playlists, clearing/adding tracks, updating playlist details. Both layers call `tokenService.getValidAccessToken()` before each request.
 
 ### Token lifecycle (`src/services/tokenService.js`)
@@ -55,11 +71,12 @@ The project is a **script-driven Node.js app** (ESM, `"type": "module"`) with no
 
 ### Database schema (MySQL, `mysql2/promise` pool)
 
-Three tables managed by sequential migration files in `src/scripts/migrations/`:
+Four tables defined in `src/scripts/migrations/schema.sql` and applied by `src/scripts/init-db.js`:
 
 - **`users`** — `spotify_user_id`, `email`, `access_token` (encrypted), `refresh_token` (encrypted), `token_expiry_time`
 - **`monitored_playlists`** — `user_id` FK, `spotify_playlist_id`, `playlist_name`, `is_active`
-- **`target_playlist`** — one row per user; `spotify_playlist_id`, `playlist_name`, `last_successful_run`
+- **`monitored_artists`** — `user_id` FK, `spotify_artist_id`, `artist_name`, `is_active`, `fetched_at`
+- **`target_playlist`** — one row per user; `spotify_playlist_id`, `playlist_name`, `last_successful_run` (shared by both the playlist job and the artist job)
 
 There are **two database pool files**: `src/config/database.js` (the canonical one, used by scripts) and `src/models/database.js` (a near-duplicate, used only by `src/models/`). New code should use `src/config/database.js`.
 

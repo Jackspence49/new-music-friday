@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { config } from '../config/config.js';
 import crypto from 'crypto';
 import { tokenService } from './tokenService.js';
@@ -118,6 +119,79 @@ class SpotifyService {
       }));
     } catch (error) {
       console.error(`[ERROR][TOP_ARTISTS] Exception for user ${spotifyUserId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch albums/singles released by an artist, newest first.
+   * @param {string} spotifyUserId - Used to obtain an access token
+   * @param {string} artistId - Spotify artist ID
+   * @param {string[]} includeGroups - e.g. ['album','single']
+   * @returns {Promise<Array>} Array of album objects, or null on error
+   */
+  async getArtistAlbums(spotifyUserId, artistId, includeGroups = ['album', 'single']) {
+    try {
+      const accessToken = await tokenService.getValidAccessToken(spotifyUserId);
+      const groups = includeGroups.join(',');
+      let url = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=${groups}&limit=50`;
+      const albums = [];
+      while (url) {
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (response.status === 404) return [];
+        if (response.status === 429) {
+          console.error(`[RATE LIMIT][ARTIST_ALBUMS] artist ${artistId}`);
+          return null;
+        }
+        if (!response.ok) {
+          console.error(`[ERROR][ARTIST_ALBUMS] ${response.statusText} for artist ${artistId}`);
+          return null;
+        }
+        const data = await response.json();
+        albums.push(...(data.items || []));
+        url = data.next;
+      }
+      return albums;
+    } catch (error) {
+      console.error(`[ERROR][ARTIST_ALBUMS] Exception for artist ${artistId}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch all tracks from an album.
+   * @param {string} spotifyUserId
+   * @param {string} albumId
+   * @returns {Promise<Array>} Array of track objects with track_id, track_name, artist_names
+   */
+  async getAlbumTracks(spotifyUserId, albumId) {
+    try {
+      const accessToken = await tokenService.getValidAccessToken(spotifyUserId);
+      let url = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
+      const tracks = [];
+      while (url) {
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!response.ok) {
+          console.error(`[ERROR][ALBUM_TRACKS] ${response.statusText} for album ${albumId}`);
+          return null;
+        }
+        const data = await response.json();
+        for (const t of data.items || []) {
+          tracks.push({
+            track_id: t.id,
+            track_name: t.name,
+            artist_names: t.artists.map((a) => a.name).join(', '),
+          });
+        }
+        url = data.next;
+      }
+      return tracks;
+    } catch (error) {
+      console.error(`[ERROR][ALBUM_TRACKS] Exception for album ${albumId}:`, error);
       return null;
     }
   }

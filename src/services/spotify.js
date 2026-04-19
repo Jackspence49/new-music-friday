@@ -15,6 +15,7 @@ export const getNewReleases = async (limit = 20) => {
     const response = await spotifyApi.getNewReleases({ limit });
     return response.body.albums.items;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error fetching new releases:', error);
     throw error;
   }
@@ -26,6 +27,7 @@ export const searchTracks = async (query, limit = 20) => {
     const response = await spotifyApi.searchTracks(query, { limit });
     return response.body.tracks.items;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error searching tracks:', error);
     throw error;
   }
@@ -50,6 +52,7 @@ export const createUserPlaylist = async (spotifyUserId, name, options = {}) => {
     const response = await spotifyApi.createPlaylist(name, options);
     return response.body;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('[SPOTIFY][CREATE PLAYLIST] Error:', error);
     throw error;
   }
@@ -78,6 +81,7 @@ export const clearPlaylistTracks = async (spotifyUserId, playlistId) => {
       await spotifyApi.removeTracksFromPlaylist(playlistId, batch);
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('[SPOTIFY][CLEAR PLAYLIST] Error:', error);
     throw error;
   }
@@ -99,6 +103,7 @@ export const addTracksToPlaylist = async (spotifyUserId, playlistId, trackUris) 
       await spotifyApi.addTracksToPlaylist(playlistId, batch);
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('[SPOTIFY][ADD TRACKS] Error:', error);
     throw error;
   }
@@ -117,6 +122,7 @@ export const updatePlaylistDetails = async (spotifyUserId, playlistId, options) 
     spotifyApi.setAccessToken(accessToken);
     await spotifyApi.changePlaylistDetails(playlistId, options);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('[SPOTIFY][UPDATE PLAYLIST DETAILS] Error:', error);
     throw error;
   }

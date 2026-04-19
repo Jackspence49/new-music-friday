@@ -39,14 +39,14 @@ CREATE TABLE IF NOT EXISTS target_playlist (
     INDEX idx_spotify_playlist_id (spotify_playlist_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS top_artists (
+CREATE TABLE IF NOT EXISTS monitored_artists (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     spotify_artist_id VARCHAR(255) NOT NULL,
     artist_name VARCHAR(255) NOT NULL,
-    genres TEXT,
-    popularity INT,
-    `rank` INT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY unique_user_artist (user_id, spotify_artist_id),

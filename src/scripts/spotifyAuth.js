@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import readline from 'readline';
 import { spotifyService } from '../services/spotifyService.js';
 import { userModel } from '../models/User.js';

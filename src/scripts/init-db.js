@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import mysql from 'mysql2/promise';
 import { config } from '../config/config.js';
 
@@ -63,7 +64,7 @@ async function setupDatabase() {
     console.log('Table "target_playlist" ready.');
 
     await connection.query(`
-      CREATE TABLE IF NOT EXISTS top_artists (
+      CREATE TABLE IF NOT EXISTS monitored_artists (
         id INT PRIMARY KEY AUTO_INCREMENT,
         user_id INT NOT NULL,
         spotify_artist_id VARCHAR(255) NOT NULL,
@@ -77,7 +78,7 @@ async function setupDatabase() {
         INDEX idx_user_id (user_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
-    console.log('Table "top_artists" ready.');
+    console.log('Table "monitored_artists" ready.');
 
     console.log('Database setup complete.');
   } finally {

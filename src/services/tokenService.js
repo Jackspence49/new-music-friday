@@ -1,6 +1,5 @@
 import { spotifyService } from './spotifyService.js';
 import { userModel } from '../models/User.js';
-import { Encryption } from '../utils/encryption.js';
 
 class TokenService {
   constructor() {
@@ -37,6 +36,7 @@ class TokenService {
 
       return tokens.accessToken;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Error getting valid access token for user ${spotifyId}:`, error);
       throw error;
     }
@@ -60,6 +60,7 @@ class TokenService {
 
       if (!response.ok) {
         const error = await response.json();
+        // eslint-disable-next-line no-console
         console.error('Token refresh failed:', error);
         throw new Error(`Token refresh failed: ${error.error_description || error.error}`);
       }
@@ -71,6 +72,7 @@ class TokenService {
         expiresIn: data.expires_in,
       };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error refreshing token:', error);
       throw error;
     }
