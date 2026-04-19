@@ -9,6 +9,7 @@
     "dev": "nodemon src/index.js",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "fetch-top-artists": "node src/scripts/fetch-top-artists.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

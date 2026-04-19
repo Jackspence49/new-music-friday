@@ -11,7 +11,7 @@ class SpotifyService {
 
   getAuthorizationUrl() {
     const scope =
-      'user-read-private user-read-email playlist-read-private playlist-modify-public playlist-modify-private';
+      'user-read-private user-read-email playlist-read-private playlist-modify-public playlist-modify-private user-top-read';
     const state = crypto.randomBytes(16).toString('hex');
 
     const params = new URLSearchParams({
@@ -74,6 +74,51 @@ class SpotifyService {
     } catch (error) {
       console.error('Error getting user profile:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Fetch a user's top artists from Spotify.
+   * @param {string} spotifyUserId - The Spotify user ID
+   * @param {string} timeRange - 'short_term' (4 weeks), 'medium_term' (6 months), or 'long_term' (all time)
+   * @param {number} limit - Number of artists to fetch (1–50, default 50)
+   * @returns {Promise<Array>} Array of artist objects, or null on error
+   */
+  async getTopArtists(spotifyUserId, timeRange = 'medium_term', limit = 50) {
+    try {
+      const accessToken = await tokenService.getValidAccessToken(spotifyUserId);
+      const url = `https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}&limit=${limit}`;
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (response.status === 403) {
+        console.error(
+          `[ERROR][TOP_ARTISTS] Missing user-top-read scope for user ${spotifyUserId}. Re-authorize with the updated scope.`
+        );
+        return null;
+      }
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        console.error(`[RATE LIMIT][TOP_ARTISTS] Retry-After: ${retryAfter}`);
+        return null;
+      }
+      if (!response.ok) {
+        console.error(
+          `[ERROR][TOP_ARTISTS] Failed to fetch top artists for user ${spotifyUserId}: ${response.statusText}`
+        );
+        return null;
+      }
+      const data = await response.json();
+      return (data.items || []).map((artist, index) => ({
+        spotify_artist_id: artist.id,
+        artist_name: artist.name,
+        genres: artist.genres.join(', '),
+        popularity: artist.popularity,
+        rank: index + 1,
+      }));
+    } catch (error) {
+      console.error(`[ERROR][TOP_ARTISTS] Exception for user ${spotifyUserId}:`, error);
+      return null;
     }
   }
 
