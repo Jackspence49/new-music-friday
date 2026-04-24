@@ -52,7 +52,12 @@ async function getOrCreateTargetPlaylist(userId, spotifyUserId) {
   console.log(
     `[CREATE] Created target playlist '${playlist.name}' (${playlist.id}) for user ${spotifyUserId}`
   );
-  return { user_id: userId, spotify_playlist_id: playlist.id, playlist_name: playlist.name, last_successful_run: null };
+  return {
+    user_id: userId,
+    spotify_playlist_id: playlist.id,
+    playlist_name: playlist.name,
+    last_successful_run: null,
+  };
 }
 
 async function collectPlaylistTracks(spotifyUserId, playlists, cutoff) {
@@ -102,7 +107,11 @@ async function collectArtistTracks(spotifyUserId, artists, cutoff) {
       if (!tracks) continue;
       for (const track of tracks) {
         if (!trackMap.has(track.track_id)) {
-          trackMap.set(track.track_id, { ...track, release_date: album.release_date, album_name: album.name });
+          trackMap.set(track.track_id, {
+            ...track,
+            release_date: album.release_date,
+            album_name: album.name,
+          });
           console.log(`[NEW] ${album.release_date} | ${track.artist_names} - ${track.track_name}`);
         }
       }
@@ -160,7 +169,9 @@ async function main() {
       const dedupedTracks = Array.from(mergedMap.values());
       const trackUris = dedupedTracks.map((t) => `spotify:track:${t.track_id}`);
 
-      console.log(`\n[SUMMARY] ${playlistTrackMap.size} from playlists, ${artistTrackMap.size} from artists`);
+      console.log(
+        `\n[SUMMARY] ${playlistTrackMap.size} from playlists, ${artistTrackMap.size} from artists`
+      );
       console.log(`[SUMMARY] ${dedupedTracks.length} unique track(s) after merge`);
 
       const now = new Date();
