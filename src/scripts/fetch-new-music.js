@@ -130,62 +130,53 @@ async function main() {
 
     for (const { user_id, spotify_user_id } of users) {
       console.log(`\n========== USER: ${spotify_user_id} ==========`);
-
-      const [monitoredPlaylists, monitoredArtists] = await Promise.all([
-        getMonitoredPlaylistsForUser(user_id),
-        getMonitoredArtistsForUser(user_id),
-      ]);
-
-      if (monitoredPlaylists.length === 0 && monitoredArtists.length === 0) {
-        console.log('[SKIP] No monitored playlists or artists for this user.');
-        continue;
-      }
-
-      const target = await getOrCreateTargetPlaylist(user_id, spotify_user_id);
-      if (!target) {
-        console.warn(`[SKIP] Could not get/create target playlist for user ${spotify_user_id}`);
-        continue;
-      }
-
-      const lastRun = target.last_successful_run ? new Date(target.last_successful_run) : null;
-      const cutoff = lastRun ?? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      console.log(`[INFO] Cutoff: ${cutoff.toISOString()}`);
-
-      // Collect tracks from both sources in parallel
-      const [playlistTrackMap, artistTrackMap] = await Promise.all([
-        monitoredPlaylists.length > 0
-          ? collectPlaylistTracks(spotify_user_id, monitoredPlaylists, cutoff)
-          : Promise.resolve(new Map()),
-        monitoredArtists.length > 0
-          ? collectArtistTracks(spotify_user_id, monitoredArtists, cutoff)
-          : Promise.resolve(new Map()),
-      ]);
-
-      // Merge: playlist tracks first, then artist tracks fill in any gaps
-      const mergedMap = new Map([...playlistTrackMap, ...artistTrackMap]);
-      // Re-add playlist tracks so they aren't overwritten by artist tracks with same ID
-      for (const [id, track] of playlistTrackMap) mergedMap.set(id, track);
-
-      const dedupedTracks = Array.from(mergedMap.values());
-      const trackUris = dedupedTracks.map((t) => `spotify:track:${t.track_id}`);
-
-      console.log(
-        `\n[SUMMARY] ${playlistTrackMap.size} from playlists, ${artistTrackMap.size} from artists`
-      );
-      console.log(`[SUMMARY] ${dedupedTracks.length} unique track(s) after merge`);
-
-      const now = new Date();
-      const newDescription = `This playlist is managed by automation. Last refreshed: ${now.toISOString().slice(0, 10)}`;
-
       try {
-        await clearPlaylistTracks(spotify_user_id, target.spotify_playlist_id);
-        console.log(`[REFRESH] Cleared playlist ${target.spotify_playlist_id}`);
+        const [monitoredPlaylists, monitoredArtists] = await Promise.all([
+          getMonitoredPlaylistsForUser(user_id),
+          getMonitoredArtistsForUser(user_id),
+        ]);
+
+        if (monitoredPlaylists.length === 0 && monitoredArtists.length === 0) {
+          console.log('[SKIP] No monitored playlists or artists for this user.');
+          continue;
+        }
+
+        const target = await getOrCreateTargetPlaylist(user_id, spotify_user_id);
+
+        const lastRun = target.last_successful_run ? new Date(target.last_successful_run) : null;
+        const cutoff = lastRun ?? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        console.log(`[INFO] Cutoff: ${cutoff.toISOString()}`);
+
+        const playlistTrackMap =
+          monitoredPlaylists.length > 0
+            ? await collectPlaylistTracks(spotify_user_id, monitoredPlaylists, cutoff)
+            : new Map();
+        const artistTrackMap =
+          monitoredArtists.length > 0
+            ? await collectArtistTracks(spotify_user_id, monitoredArtists, cutoff)
+            : new Map();
+
+        // Playlist tracks take priority over artist tracks for the same track ID
+        const mergedMap = new Map([...artistTrackMap, ...playlistTrackMap]);
+
+        const dedupedTracks = Array.from(mergedMap.values());
+        const trackUris = dedupedTracks.map((t) => `spotify:track:${t.track_id}`);
+
+        console.log(
+          `\n[SUMMARY] ${playlistTrackMap.size} from playlists, ${artistTrackMap.size} from artists`
+        );
+        console.log(`[SUMMARY] ${dedupedTracks.length} unique track(s) after merge`);
+
+        const now = new Date();
+        const newDescription = `This playlist is managed by automation. Last refreshed: ${now.toISOString().slice(0, 10)}`;
 
         if (trackUris.length > 0) {
+          await clearPlaylistTracks(spotify_user_id, target.spotify_playlist_id);
+          console.log(`[REFRESH] Cleared playlist ${target.spotify_playlist_id}`);
           await addTracksToPlaylist(spotify_user_id, target.spotify_playlist_id, trackUris);
           console.log(`[REFRESH] Added ${trackUris.length} tracks`);
         } else {
-          console.log(`[REFRESH] No new tracks to add`);
+          console.log(`[REFRESH] No new tracks to add — skipping clear`);
         }
 
         await updatePlaylistDetails(spotify_user_id, target.spotify_playlist_id, {
@@ -199,7 +190,7 @@ async function main() {
         );
         console.log(`[REFRESH] Updated last_successful_run`);
       } catch (err) {
-        console.error(`[ERROR][REFRESH] ${err.message}`);
+        console.error(`[ERROR] User ${spotify_user_id}: ${err.message}`);
       }
     }
   } catch (error) {
